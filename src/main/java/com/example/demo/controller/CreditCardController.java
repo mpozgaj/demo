@@ -6,11 +6,16 @@ import com.example.demo.openapi.model.CardResponse;
 import com.example.demo.openapi.model.NewCardRequest;
 import com.example.demo.service.CreditCardService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.factory.Mappers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.example.demo.validator.Validator.isValidName;
+import static com.example.demo.validator.Validator.isValideOib;
+
+@Slf4j
 @RestController
 @AllArgsConstructor
 public class CreditCardController implements NewCardRequestApi {
@@ -20,7 +25,11 @@ public class CreditCardController implements NewCardRequestApi {
 
     @Override
     public ResponseEntity<Void> createCard(final NewCardRequest newCardRequest) {
-        //request validation
+        log.debug("Create credit card request for OIB: {}", newCardRequest.getOib());
+        isValidName(newCardRequest.getFirstName(), "name");
+        isValidName(newCardRequest.getLastName(), "last name");
+        isValideOib(newCardRequest.getOib());
+        log.debug("Credit card create request validated for OIB: {}", newCardRequest.getOib());
         creditCardService.saveCreditCard(newCardRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

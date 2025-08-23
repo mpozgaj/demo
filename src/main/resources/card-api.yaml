@@ -13,11 +13,11 @@ paths:
         - new-card-request
       summary: Create new card
       requestBody:
+        required: true
         content:
-          '*/*':
+          application/json:
             schema:
               $ref: '#/components/schemas/NewCardRequest'
-        required: true
       responses:
         201:
           description: New card request successfully created.
@@ -99,6 +99,11 @@ components:
     NewCardRequest:
       title: Card request
       type: object
+      required:
+        - firstName
+        - lastName
+        - status
+        - oib
       properties:
         firstName:
           type: string
