@@ -73,11 +73,29 @@ public class CreditCardTest {
     }
 
     @Test
+    void createCardBadRequestTest() {
+        createCardAssertion("123", "first", "last", "PENDING", 422);
+        createCardAssertion("12345678901", "fi rst", "last", "PENDING", 422);
+        createCardAssertion("12345678901", "first", "la st", "PENDING", 422);
+        createCardAssertion("12345678902", "first", "last", "PENDING", 201);
+    }
+
+    @Test
     void deleteCardTest() {
         assertDbEntries(3);
         createCard();
         assertDbEntries(4);
         when().delete(uri + "/api/v1/card-request/16656789015")
+                .then()
+                .assertThat()
+                .statusCode(204);
+        assertDbEntries(3);
+    }
+
+    @Test
+    void deleteCardNotFoundTest() {
+        assertDbEntries(3);
+        when().delete(uri + "/api/v1/card-request/11156789015")
                 .then()
                 .assertThat()
                 .statusCode(204);
@@ -90,17 +108,31 @@ public class CreditCardTest {
     }
 
     private void createCard() {
+        createCardAssertion("16656789015", "firstname", "lastname", "REJECTED", 201, true);
+    }
+
+    private void createCardAssertion(String oib, String firstName, String lastName, String status, int statusCode) {
+        createCardAssertion(oib, firstName, lastName, status, statusCode, statusCode == 422);
+    }
+
+    private void createCardAssertion(String oib, String firstName, String lastName, String status, int statusCode, boolean skipDelete) {
         Map<String, String> request = new HashMap<>();
-        request.put("oib", "16656789015");
-        request.put("firstName", "firstname");
-        request.put("lastName", "lastname");
-        request.put("status", "REJECTED");
+        request.put("oib", oib);
+        request.put("firstName", firstName);
+        request.put("lastName", lastName);
+        request.put("status", status);
         given().contentType("application/json")
                 .body(request)
                 .when()
                 .post(uri + "/api/v1/card-request")
                 .then()
                 .assertThat()
-                .statusCode(201);
+                .statusCode(statusCode);
+        if (!skipDelete) {
+            when().delete(uri + "/api/v1/card-request/" + oib)
+                    .then()
+                    .assertThat()
+                    .statusCode(204);
+        }
     }
 }
